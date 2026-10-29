@@ -1,47 +1,53 @@
+
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
+
 import itemRoutes from "./routes/ItemRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import bookingRoutes from "./routes/BookingRoutes.js";
 import turfRoutes from "./routes/turfroutes.js";
- // 👈 new import
 
-// Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 
-// ✅ Middleware
-app.use(cors({
-  origin: process.env.CORS_ORIGIN,
-  credentials: true,
-}));
+// Middleware
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-// ✅ Base route
+// Base route
 app.get("/", (req, res) => {
-  res.send("Backend is working fine ✅");
+  res.send("Backend is working fine");
 });
-app.use((req, res, next) => {
-  if (req.method !== "GET") {
-    express.json()(req, res, next);
-  } else {
-    next();
-  }
-});
-// ✅ Routes
+
+// API routes
 app.use("/api/items", itemRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/bookings", bookingRoutes);
-app.use("/api/turfs", turfRoutes); // 👈 new route for turf booking
+app.use("/api/turfs", turfRoutes);
 
-
-
-// ✅ Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Connect to DB first, then start server
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
